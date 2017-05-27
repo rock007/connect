@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_notification1"
+        android:icon="@mipmap/float_menu"
+        android:title="功能"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/menu_upload"
+                android:orderInCategory="100"
+                android:title="立即上传" />
+            <item
+                android:id="@+id/menu_setting"
+                android:orderInCategory="102"
+                android:title="参数" />
+            <item
+                android:id="@+id/r"
+                android:orderInCategory="103"
+                android:title="帮助" />
+
+        </menu>
+    </item>
+
+</menu>
