@@ -113,20 +113,30 @@ public class SettingActivity extends AppCompatActivity {
 
                     Integer lastNum=Integer.parseInt(otherIps[3]);
 
+                    where.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            tv_lochost.setText(localIp);
+                            tv_host.setText("");
+                            StringHelper.saveKey("server_host","");
+                        }
+                    });
                     for(int i=0;i<255;i++){
 
                         if(i==lastNum) continue;
 
+                        resp="";
                         final String searchIp=otherIps[0]+"."+otherIps[1]+"."+otherIps[2]+"."+String.valueOf(i);
                         InetAddress RemoteIP =StringHelper.convert2IpAddress(searchIp);
 
-                        Log.d(TAG,"searchHost "+searchIp+":"+resp);
+                        Log.d(TAG,"searchHost "+searchIp);
 
                         where.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
 
-                                tv_lochost.setText(localIp);
+
                                 pd.setMessage("正在查询 ip: "+searchIp+"    ,返回:"+resp);
                             }
                         });
@@ -143,7 +153,7 @@ public class SettingActivity extends AppCompatActivity {
 
                         if(StringUtils.isNotEmpty(resp)){
 
-                            Log.d(TAG,"find server ip"+searchIp);
+                            Log.d(TAG,"find server ip:"+searchIp);
 
                             StringHelper.saveKey("server_host",searchIp);
 

@@ -7,6 +7,8 @@ import android.net.wifi.WifiManager;
 
 import com.wb.connect.MyApp;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 import io.netty.buffer.ByteBuf;
@@ -82,14 +84,7 @@ public class StringHelper {
         byte[] bytes= new byte[] {
                 (byte)Integer.parseInt(ipStr[0]), (byte)Integer.parseInt(ipStr[1]), (byte)Integer.parseInt(ipStr[2]), (byte)Integer.parseInt(ipStr[3])
         };
-/****
-        byte[] bb= new byte[] {
-                (byte)192, (byte)168, (byte)1, (byte)106};
 
-        byte[] bytes22= new byte[] {
-                (byte)Integer.parseInt("192"), (byte)Integer.parseInt("168"), (byte)Integer.parseInt("1"), (byte)Integer.parseInt("106")
-        };
-***/
         return InetAddress.getByAddress(bytes);
     }
 
@@ -100,6 +95,40 @@ public class StringHelper {
                 ((i >> 16 ) & 0xFF) + "." +
                 ( i >> 24 & 0xFF) ;
     }
+
+    public static String sendUdp(InetAddress ipaddress, Integer point, String msg){
+
+        String recvStr="" ;
+
+        DatagramSocket client;
+
+        byte[] sendBuf;
+
+        byte[] recvBuf = new byte[100];
+
+        try{
+
+            sendBuf = msg.getBytes();
+
+            client=new DatagramSocket();
+            client.setSoTimeout(5000);
+
+            DatagramPacket sendPacket = new DatagramPacket(sendBuf, sendBuf.length, ipaddress, point);
+            client.send(sendPacket);
+
+            DatagramPacket recvPacket = new DatagramPacket(recvBuf, recvBuf.length);
+            client.receive(recvPacket);
+
+            recvStr = new String(recvPacket.getData(), 0, recvPacket.getLength());
+
+            client.close();
+
+        }catch(Exception ex){
+
+        }
+        return    recvStr;
+    }
+
 
     public static void saveKey(String key,String value){
 

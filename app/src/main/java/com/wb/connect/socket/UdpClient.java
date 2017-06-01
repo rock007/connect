@@ -1,45 +1,74 @@
 package com.wb.connect.socket;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-
 /**
- * Created by sam on 2017/5/23.
+ * Created by sam on 2017/6/1.
  */
+
+ import com.wb.connect.socket.handler.UdpClientHandler;
+
+ import io.netty.bootstrap.Bootstrap;
+ import io.netty.channel.Channel;
+ import io.netty.channel.ChannelInitializer;
+ import io.netty.channel.EventLoopGroup;
+ import io.netty.channel.nio.NioEventLoopGroup;
+ import io.netty.channel.socket.SocketChannel;
+ import io.netty.channel.socket.nio.NioSocketChannel;
+
+ import java.io.BufferedReader;
+ import java.io.IOException;
+ import java.io.InputStreamReader;
 
 public class UdpClient {
 
-    public static String sendUdp(InetAddress ipaddress, Integer point, String msg){
+    public static String host = "127.0.0.1";
+    public static int port = 10024;
 
-        String recvStr="" ;
-
-        DatagramSocket client;
-
-        byte[] sendBuf;
-
-        byte[] recvBuf = new byte[100];
-
-        try{
-
-            sendBuf = msg.getBytes();
-
-            client=new DatagramSocket();
-            client.setSoTimeout(5000);
-
-            DatagramPacket sendPacket = new DatagramPacket(sendBuf, sendBuf.length, ipaddress, point);
-            client.send(sendPacket);
-
-            DatagramPacket recvPacket = new DatagramPacket(recvBuf, recvBuf.length);
-            client.receive(recvPacket);
-
-            recvStr = new String(recvPacket.getData(), 0, recvPacket.getLength());
-
-            client.close();
-
-        }catch(Exception ex){
-
-        }
-        return    recvStr;
+    public UdpClient(final String host, final int port) {
+        this.host = host;
+        this.port = port;
     }
+
+    /****
+     *
+     * @param msg
+     * @return
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public String send(String msg) throws InterruptedException, IOException {
+        EventLoopGroup group = new NioEventLoopGroup();
+        try {
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new UdpClientHandler());
+                        }
+                    });
+
+            // 连接服务端
+            Channel ch = b.connect(host, port).sync().channel();
+
+            // 控制台输入
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+            for (;;) {
+                String line = in.readLine();
+                if (line == null) {
+                    continue;
+                }
+                /*
+                 * 向服务端发送在控制台输入的文本 并用"\r\n"结尾
+                 * 之所以用\r\n结尾 是因为我们在handler中添加了 DelimiterBasedFrameDecoder 帧解码。
+                 * 这个解码器是一个根据\n符号位分隔符的解码器。所以每条消息的最后必须加上\n否则无法识别和解码
+                 * */
+                ch.writeAndFlush(line + "\r\n");
+            }
+        } finally {
+            // The connection is closed automatically on shutdown.
+            group.shutdownGracefully();
+        }
+    }
+
 }
