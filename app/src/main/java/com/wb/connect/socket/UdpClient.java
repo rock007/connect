@@ -4,26 +4,47 @@ package com.wb.connect.socket;
  * Created by sam on 2017/6/1.
  */
 
+ import android.util.Log;
+
  import com.wb.connect.socket.handler.UdpClientHandler;
 
  import io.netty.bootstrap.Bootstrap;
+ import io.netty.buffer.ByteBuf;
  import io.netty.channel.Channel;
+ import io.netty.channel.ChannelHandlerContext;
  import io.netty.channel.ChannelInitializer;
+ import io.netty.channel.ChannelOption;
+ import io.netty.channel.ChannelPromise;
  import io.netty.channel.EventLoopGroup;
  import io.netty.channel.nio.NioEventLoopGroup;
+ import io.netty.channel.socket.DatagramChannel;
+ import io.netty.channel.socket.DatagramPacket;
  import io.netty.channel.socket.SocketChannel;
+ import io.netty.channel.socket.nio.NioDatagramChannel;
  import io.netty.channel.socket.nio.NioSocketChannel;
+ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+ import io.netty.handler.codec.Delimiters;
+ import io.netty.handler.codec.MessageToMessageEncoder;
+ import io.netty.handler.codec.string.StringDecoder;
+ import io.netty.handler.codec.string.StringEncoder;
+ import io.netty.util.CharsetUtil;
+ import io.netty.util.ReferenceCountUtil;
 
  import java.io.BufferedReader;
  import java.io.IOException;
  import java.io.InputStreamReader;
+ import java.net.InetAddress;
+ import java.net.InetSocketAddress;
+ import java.util.List;
 
 public class UdpClient {
 
-    public static String host = "127.0.0.1";
-    public static int port = 10024;
+    private final String TAG=UdpClient.class.getName();
 
-    public UdpClient(final String host, final int port) {
+    public  InetAddress host ;
+    public  int port = 10024;
+
+    public UdpClient(final InetAddress host, final int port) {
         this.host = host;
         this.port = port;
     }
@@ -35,36 +56,32 @@ public class UdpClient {
      * @throws InterruptedException
      * @throws IOException
      */
-    public String send(String msg) throws InterruptedException, IOException {
+    public void send(String msg) throws InterruptedException, IOException {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<SocketChannel>() {
+                    .channel(NioDatagramChannel.class)
+                    .option(ChannelOption.SO_BROADCAST, true)
+                    //.handler(new UdpClientHandler());
+
+                    .handler(new MessageToMessageEncoder<String>() {
                         @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new UdpClientHandler());
+                        protected void encode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
+                            ByteBuf buf = ctx.alloc().buffer();
+                            buf.writeBytes(msg.getBytes(CharsetUtil.UTF_8));
+                            //buf.writeByte(LogEvent.SEPARATOR);
+                            //buf.writeBytes(msg.getMsg().getBytes(CharsetUtil.UTF_8));
+                            out.add(new DatagramPacket(buf,new  InetSocketAddress (host,port) ));
                         }
-                    });
+                    }) ;
 
             // 连接服务端
             Channel ch = b.connect(host, port).sync().channel();
 
-            // 控制台输入
-            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            for (;;) {
-                String line = in.readLine();
-                if (line == null) {
-                    continue;
-                }
-                /*
-                 * 向服务端发送在控制台输入的文本 并用"\r\n"结尾
-                 * 之所以用\r\n结尾 是因为我们在handler中添加了 DelimiterBasedFrameDecoder 帧解码。
-                 * 这个解码器是一个根据\n符号位分隔符的解码器。所以每条消息的最后必须加上\n否则无法识别和解码
-                 * */
-                ch.writeAndFlush(line + "\r\n");
-            }
+            ch.writeAndFlush(msg + "\r\n");
+
+
         } finally {
             // The connection is closed automatically on shutdown.
             group.shutdownGracefully();

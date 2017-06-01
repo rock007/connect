@@ -312,7 +312,17 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
                         String searchIp=otherIps[0]+"."+otherIps[1]+"."+otherIps[2]+"."+i;
                         InetAddress RemoteIP =StringHelper.convert2IpAddress(searchIp);
-                        String resp= UdpClient.sendUdp(RemoteIP,10024,"hi");
+                        String resp=""; //UdpClient.sendUdp(RemoteIP,10024,"hi");
+
+                        try{
+                            new  UdpClient(RemoteIP,10024).send("hi");
+
+                            resp="ok";
+                        }catch (Exception ex){
+
+                            Log.i(TAG,"UdpClient check ip:",ex);
+                            resp="";
+                        }
 
                         Log.d(TAG,"searchHost "+searchIp+":"+resp);
 

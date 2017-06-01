@@ -127,7 +127,7 @@ public class SettingActivity extends AppCompatActivity {
                         if(i==lastNum) continue;
 
                         resp="";
-                        final String searchIp=otherIps[0]+"."+otherIps[1]+"."+otherIps[2]+"."+String.valueOf(i);
+                        final String searchIp="192.168.0.107";//otherIps[0]+"."+otherIps[1]+"."+otherIps[2]+"."+String.valueOf(i);
                         InetAddress RemoteIP =StringHelper.convert2IpAddress(searchIp);
 
                         Log.d(TAG,"searchHost "+searchIp);
@@ -135,7 +135,6 @@ public class SettingActivity extends AppCompatActivity {
                         where.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-
 
                                 pd.setMessage("正在查询 ip: "+searchIp+"    ,返回:"+resp);
                             }
@@ -145,7 +144,16 @@ public class SettingActivity extends AppCompatActivity {
 
                         while(times<1&&StringUtils.isEmpty(resp)){
 
-                            resp= UdpClient.sendUdp(RemoteIP,10024,"hi");
+                            try{
+                                new  UdpClient(RemoteIP,10024).send("hi");
+
+                                resp="ok";
+                            }catch (Exception ex){
+
+                                Log.i(TAG,"UdpClient check ip:",ex);
+                                resp="";
+                            }
+
                             Log.d(TAG,"times:"+times+"  resp:"+resp);
 
                             times++;
