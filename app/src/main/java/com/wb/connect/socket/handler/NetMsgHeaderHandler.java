@@ -2,6 +2,7 @@ package com.wb.connect.socket.handler;
 
 import android.os.Build;
 import android.util.Log;
+import android.view.View;
 
 import com.wb.connect.helper.StringHelper;
 import com.wb.connect.socket.header.NetMsgHeader;
@@ -38,12 +39,19 @@ public class NetMsgHeaderHandler extends ChannelInboundHandlerAdapter {
     private int sendIndex=0;
     public static AtomicInteger ai=new AtomicInteger(0);
 
-    public NetMsgHeaderHandler(List<Map<String,Object>> d) {
+    OnNextProcessListener listener;
+    public interface OnNextProcessListener {
+        void onNextProcess(int position, Map<String,Object> item);
+        void onNotifyMsg(String msg);
+    }
+
+    public NetMsgHeaderHandler(List<Map<String,Object>> d,OnNextProcessListener listener1) {
         super();
 
         //init
         data=d;
         sendIndex=0;
+        listener=listener1;
     }
 
     @Override
@@ -128,6 +136,7 @@ public class NetMsgHeaderHandler extends ChannelInboundHandlerAdapter {
 
                         ctx.writeAndFlush(ctx.alloc().buffer().writeBytes(respBuf));
 
+                        listener.onNotifyMsg("共"+data.size()+"张图片，正在上传第"+sendIndex+"张，完成"+(data.size()-sendIndex)+"张");
                         sendIndex++;
 
                     }else{

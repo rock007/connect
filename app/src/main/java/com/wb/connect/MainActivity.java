@@ -22,6 +22,7 @@ import com.wb.connect.helper.DbHelper;
 import com.wb.connect.helper.StringHelper;
 import com.wb.connect.socket.TcpWorkJob;
 import com.wb.connect.socket.UdpClient;
+import com.wb.connect.socket.handler.NetMsgHeaderHandler;
 import com.wb.connect.ui.SelectDirActivity;
 import com.wb.connect.ui.SettingActivity;
 
@@ -255,6 +256,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             if(dbHelper.checkUploadIsExist(f.getPath())){
 
                 item.put("is_uploaded",true);
+                continue;
+
             }else{
                 item.put("is_uploaded",false);
             }
@@ -377,7 +380,33 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         }
 
-        socketThread=new Thread(new TcpWorkJob(data_map));
+        final Activity where=this;
+        socketThread=new Thread(new TcpWorkJob(data_map, new NetMsgHeaderHandler.OnNextProcessListener() {
+            @Override
+            public void onNextProcess(int position, final Map<String, Object> item) {
+
+                where.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        Log.d(TAG," send "+item.get("file_name").toString());
+                    }
+                });
+            }
+
+            @Override
+            public void onNotifyMsg(final String msg) {
+
+                where.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        status_tv.setText(msg);
+                        Log.d(TAG," onNotifyMsg :"+msg);
+                    }
+                });
+            }
+        }));
         socketThread.start();
 
     }

@@ -1,5 +1,6 @@
 package com.wb.connect.adapter;
 
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,10 +63,12 @@ public class PictureListRecyclerViewAdapter  extends RecyclerView.Adapter<Pictur
         if((Boolean) item.get("is_uploaded")){
 
             holder.tv_tips.setText("已上传");
+            holder.tv_tips.setTextColor(Color.GREEN);
 
         }else{
 
             holder.tv_tips.setText("未上传");
+            holder.tv_tips.setTextColor(Color.RED);
         }
 
         //大小调整会使布局乱掉

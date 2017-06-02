@@ -47,11 +47,15 @@ public class TcpWorkJob implements Runnable{
 
     private List<Map<String,Object>> data;
 
-    public  TcpWorkJob(List<Map<String,Object>> d) {
+    NetMsgHeaderHandler.OnNextProcessListener listener;
+
+
+    public  TcpWorkJob(List<Map<String,Object>> d,NetMsgHeaderHandler.OnNextProcessListener listener1) {
 
         workerGroup = new NioEventLoopGroup();
 
         data=d;
+        listener=listener1;
     }
 
     @Override
@@ -76,7 +80,7 @@ public class TcpWorkJob implements Runnable{
                     .handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new NetMsgHeaderHandler(data));
+                        ch.pipeline().addLast(new NetMsgHeaderHandler(data,listener));
                     }
                 });
 
@@ -108,6 +112,8 @@ public class TcpWorkJob implements Runnable{
         }
         catch (Exception e) {
             Log.e(TAG,"ConnectServer:start,exception:", e);
+            listener.onNotifyMsg(e.getMessage());
+
         }finally {
             workerGroup.shutdownGracefully();
 
