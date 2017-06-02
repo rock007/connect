@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.wb.connect.adapter.PictureListRecyclerViewAdapter;
+import com.wb.connect.helper.DbHelper;
 import com.wb.connect.helper.StringHelper;
 import com.wb.connect.socket.TcpWorkJob;
 import com.wb.connect.socket.UdpClient;
@@ -41,6 +42,8 @@ import butterknife.OnClick;
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
 
     private final String TAG=MainActivity.class.getName();
+
+    DbHelper dbHelper;
 
     @BindView(R.id.dir_txt)
     TextView dir_txt;
@@ -69,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         ButterKnife.bind(this);
 
+        dbHelper=new DbHelper(this);
         //下拉
         swipeRefreshLayout.setColorSchemeResources(
                 R.color.blue,
@@ -146,6 +150,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout.setOnRefreshListener(this);
 
         onRefresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dbHelper.close();
     }
 
     @Override
@@ -241,6 +251,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             Log.i(TAG,"dir:"+f.getAbsolutePath());
 
             Map<String,Object> item=new HashMap<>();
+
+            if(dbHelper.checkUploadIsExist(f.getPath())){
+
+                item.put("is_uploaded",true);
+            }else{
+                item.put("is_uploaded",false);
+            }
 
             item.put("file_name",f.getName());
             item.put("file_path",f.getAbsolutePath());
@@ -359,6 +376,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             return;
 
         }
+
         socketThread=new Thread(new TcpWorkJob(data_map));
         socketThread.start();
 

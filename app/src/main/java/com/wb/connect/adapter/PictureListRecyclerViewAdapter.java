@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.wb.connect.MyApp;
 import com.wb.connect.R;
 
@@ -40,13 +41,12 @@ public class PictureListRecyclerViewAdapter  extends RecyclerView.Adapter<Pictur
 
     public PictureListRecyclerViewAdapter(List<Map<String,Object>> items) {
         records = items;
-        //mListener = listener;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.ct_image_simple_item_layout, parent, false);
+                .inflate(R.layout.ct_image_list_item_layout, parent, false);
         return new ViewHolder(view);
     }
 
@@ -55,15 +55,26 @@ public class PictureListRecyclerViewAdapter  extends RecyclerView.Adapter<Pictur
 
         final Map<String,Object> item=records.get(position);
 
-        //holder.tv_title.setText(item.get("file_name").toString());
+        holder.tv_title.setText(item.get("file_name").toString());
 
-        //holder.tv_title.setVisibility(View.INVISIBLE);
+        holder.tv_title.setVisibility(View.INVISIBLE);
 
-        //holder.tv_tips.setText("waiting");
+        if((Boolean) item.get("is_uploaded")){
 
+            holder.tv_tips.setText("已上传");
+
+        }else{
+
+            holder.tv_tips.setText("未上传");
+        }
+
+        //大小调整会使布局乱掉
         Glide.with(MyApp.applicationContext).load(item.get("file_path").toString())
-                .crossFade()
+                //.crossFade()
                 .placeholder(R.mipmap.pic_holder)
+                .centerCrop()
+                //.override(100, 100)
+                .dontAnimate()
                 .into((ImageView) holder.iv_image);
         /****
         holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -134,11 +145,11 @@ public class PictureListRecyclerViewAdapter  extends RecyclerView.Adapter<Pictur
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        //@BindView(R.id.tv_title)
-        //public TextView tv_title;
+        @BindView(R.id.tv_title)
+        public TextView tv_title;
 
-        //@BindView(R.id.tv_tips)
-        //public  TextView tv_tips;
+        @BindView(R.id.tv_tips)
+        public  TextView tv_tips;
 
         @BindView(R.id.iv_image)
         public  ImageView iv_image;
